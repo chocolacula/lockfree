@@ -1,0 +1,13 @@
+BasedOnStyle: Google
+
+KeepEmptyLinesAtTheStartOfBlocks: true
+ColumnLimit: 120
+
+AllowShortIfStatementsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowAllArgumentsOnNextLine: false
+
+AlwaysBreakTemplateDeclarations: Yes
+
+DerivePointerAlignment: false
+PointerAlignment: Left
