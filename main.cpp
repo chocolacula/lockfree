@@ -2,21 +2,9 @@
 #include <thread>
 
 #include "list.h"
-#include "spinlock.h"
 #include "stack.h"
 
-int main(int argc, char** argv) {
-  /*
-  auto l = lockfree::List<int>();
-
-  l.push_front(4);
-  l.push_front(3);
-  l.push_back(5);
-  l.push_back(6);
-
-  l.print();
-  */
-
+void test_stack() {
   auto s = lockfree::Stack<int>();
   std::thread t1([&]() {
     s.push(2);
@@ -59,6 +47,57 @@ int main(int argc, char** argv) {
   t4.join();
 
   s.print();
+}
+
+void test_list() {
+  auto l = lockfree::List<int>();
+
+  std::thread t1([&]() {
+    l.push_front(4);
+    l.push_front(2);
+    l.push_back(6);
+    l.push_back(8);
+    l.push_back(10);
+  });
+
+  std::thread t2([&]() {
+    l.push_front(3);
+    l.push_front(1);
+    l.push_back(5);
+    l.push_back(7);
+    l.push_back(9);
+  });
+
+  t1.join();
+  t2.join();
+
+  l.print();
+
+    std::thread t3([&]() {
+    l.remove(4);
+    l.remove(2);
+    l.remove(6);
+    l.remove(8);
+    l.remove(10);
+  });
+
+  std::thread t4([&]() {
+    l.remove(3);
+    l.remove(1);
+    l.remove(5);
+    l.remove(7);
+    l.remove(9);
+  });
+
+  t3.join();
+  t4.join();
+
+  l.print();
+}
+
+int main(int argc, char** argv) {
+  test_stack();
+  test_list();
 
   return 0;
 }
