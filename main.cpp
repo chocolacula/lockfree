@@ -1,8 +1,8 @@
 #include <iostream>
 #include <thread>
 
-#include "list.h"
-#include "stack.h"
+#include "lockfree/list.h"
+#include "lockfree/stack.h"
 
 void test_stack() {
   auto s = lockfree::Stack<int>();
@@ -73,7 +73,7 @@ void test_list() {
 
   l.print();
 
-    std::thread t3([&]() {
+  std::thread t3([&]() {
     l.remove(4);
     l.remove(2);
     l.remove(6);

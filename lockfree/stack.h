@@ -1,3 +1,4 @@
+#include <atomic>
 #include <cstddef>
 #include <iostream>
 #include <stdexcept>
@@ -32,11 +33,10 @@ struct Stack {
 
     node->next = _head.load(std::memory_order_relaxed);
 
-    while (!std::atomic_compare_exchange_weak_explicit(  //
-        &_head,                                          //
-        &node->next,                                     // expected
-        node,                                            // desired
-        std::memory_order_release,                       //
+    while (!_head.compare_exchange_weak(  //
+        node->next,                       // expected
+        node,                             // desired
+        std::memory_order_release,        //
         std::memory_order_relaxed)) {
     }
   }
@@ -44,11 +44,10 @@ struct Stack {
   void pop() {
     auto* node = _head.load(std::memory_order_relaxed);
 
-    while (!std::atomic_compare_exchange_weak_explicit(  //
-        &_head,                                          //
-        &node,                                           // expected
-        node->next,                                      // desired
-        std::memory_order_release,                       //
+    while (!_head.compare_exchange_weak(  //
+        node,                             // expected
+        node->next,                       // desired
+        std::memory_order_release,        //
         std::memory_order_relaxed)) {
     }
 
