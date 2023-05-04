@@ -31,25 +31,24 @@ struct Stack {
   void push(T&& val) {
     auto* node = new Node(std::forward<T>(val));
 
-    node->next = _head.load(std::memory_order_relaxed);
-
-    while (!_head.compare_exchange_weak(  //
-        node->next,                       // expected
-        node,                             // desired
-        std::memory_order_release,        //
-        std::memory_order_relaxed)) {
-    }
+    do {
+      node->next = _head.load(std::memory_order_relaxed);
+    } while (!_head.compare_exchange_weak(  //
+        node->next,                         // expected
+        node,                               // desired
+        std::memory_order_release,          //
+        std::memory_order_relaxed));
   }
 
   void pop() {
-    auto* node = _head.load(std::memory_order_relaxed);
-
-    while (!_head.compare_exchange_weak(  //
-        node,                             // expected
-        node->next,                       // desired
-        std::memory_order_release,        //
-        std::memory_order_relaxed)) {
-    }
+    Node* node;
+    do {
+      node = _head.load(std::memory_order_relaxed);
+    } while (!_head.compare_exchange_weak(  //
+        node,                               // expected
+        node->next,                         // desired
+        std::memory_order_release,          //
+        std::memory_order_relaxed));
 
     delete node;
   }
