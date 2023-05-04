@@ -7,9 +7,7 @@ namespace lockfree {
 
 template <typename T>
 struct List {
-  List() : _head(new Node(T())), _tail(new Node(T())) {
-    _head->next = _tail;
-    _tail->prev = _head;
+  List() : _head(nullptr), _tail(nullptr) {
   }
 
   ~List() {
@@ -23,41 +21,76 @@ struct List {
   }
 
   T& front() {
-    return _head->next->val;
+    if (_head == nullptr) {
+      throw std::runtime_error("The list is empty");
+    }
+    return _head->val;
   }
 
   T& back() {
-    return _tail->prev->val;
+    if (_head == nullptr) {
+      throw std::runtime_error("The list is empty");
+    }
+    return _tail->val;
   }
 
   void push_front(T&& val) {
     auto* node = new Node(std::forward<T>(val));
 
     SpinGuard sg;
-    ins_next(_head, node);
+    if (_head == nullptr) {
+      _head = node;
+      _tail = node;
+    } else {
+      node->next = _head;
+      _head->prev = node;
+      _head = node;
+    }
   }
 
   void push_back(T&& val) {
     auto* node = new Node(std::forward<T>(val));
 
     SpinGuard sg;
-    ins_prev(_tail, node);
+    if (_tail == nullptr) {
+      _tail = node;
+      _head = node;
+    } else {
+      node->prev = _tail;
+      _tail->next = node;
+      _tail = node;
+    }
   }
 
   void remove(T&& val) {
-    auto* node = _head->next;
+    auto* node = _head;
 
-    while (node != _tail) {
+    while (node != nullptr) {
       auto* next = node->next;
 
       if (node->val == val) {
         {
           SpinGuard sg;
-          auto* prev = node->prev;
-          auto* next = node->next;
-
-          prev->next = next;
-          next->prev = prev;
+          if (node == _head) {
+            _head = node->next;
+            if (_head != nullptr) {
+              _head->prev = nullptr;
+            } else {
+              // last element was deleted
+              _tail = _head;
+            }
+          } else if (node == _tail) {
+            _tail = node->prev;
+            if (_tail != nullptr) {
+              _tail->next = nullptr;
+            } else {
+              // last element was deleted
+              _head = _tail;
+            }
+          } else {
+            node->prev->next = node->next;
+            node->next->prev = node->prev;
+          }
         }
         delete node;
         break;
@@ -69,30 +102,30 @@ struct List {
 
   size_t size() {
     size_t s = 0;
-    auto* node = _head->next;
+    auto* node = _head;
 
-    while (node != _tail) {
-      s++;
+    while (node != nullptr) {
       auto* next = node->next;
+      s++;
       node = next;
     }
     return s;
   }
 
   bool empty() {
-    return _head->next == _tail->prev;
+    return _head == nullptr;
   }
 
   void print() {
     std::cout << '[';
-    auto* node = _head->next;
+    auto* node = _head;
 
-    while (node != _tail) {
+    while (node != nullptr) {
       auto* next = node->next;
       std::cout << node->val;
 
       node = next;
-      if (node != _tail) {
+      if (node != nullptr) {
         std::cout << ", ";
       }
     }
@@ -113,29 +146,6 @@ struct List {
 
   Node* _head;
   Node* _tail;
-
-  void ins_next(Node* pivot, Node* node) {
-    auto* prev = pivot;
-    auto* next = pivot->next;
-
-    ins(prev, node, next);
-  }
-
-  void ins_prev(Node* pivot, Node* node) {
-    auto* prev = pivot->prev;
-    auto* next = pivot;
-
-    ins(prev, node, next);
-  }
-
-  static inline void ins(Node* prev, Node* node, Node* next) {
-    // doesn't affect other threads
-    node->prev = prev;
-    node->next = next;
-
-    prev->next = node;
-    next->prev = node;
-  }
 };
 
 }  // namespace lockfree

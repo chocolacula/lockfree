@@ -59,8 +59,8 @@ struct Stack {
     auto* node = _head.load();
 
     while (node != nullptr) {
-      s++;
       auto* next = node->next;
+      s++;
       node = next;
     }
     return s;
