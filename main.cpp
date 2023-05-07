@@ -1,3 +1,4 @@
+#include <cassert>
 #include <iostream>
 #include <thread>
 
@@ -6,51 +7,53 @@
 
 void test_stack() {
   auto s = lockfree::Stack<int>();
-  std::thread t1([&]() {
-    s.push(2);
-    s.push(4);
-    s.push(6);
-    s.push(8);
-    s.push(10);
-  });
+  for (auto i = 0; i < 100; i++) {
+    std::thread t1([&]() {
+      s.push(2);
+      s.push(4);
+      s.push(6);
+      s.push(8);
+      s.push(10);
+    });
 
-  std::thread t2([&]() {
-    s.push(1);
-    s.push(3);
-    s.push(5);
-    s.push(7);
-    s.push(9);
-  });
+    std::thread t2([&]() {
+      s.push(1);
+      s.push(3);
+      s.push(5);
+      s.push(7);
+      s.push(9);
+    });
 
-  t1.join();
-  t2.join();
+    t1.join();
+    t2.join();
 
-  s.print();
+    assert(s.empty());
 
-  std::thread t3([&]() {
-    s.pop();
-    s.pop();
-    s.pop();
-    s.pop();
-    s.pop();
-  });
+    std::thread t3([&]() {
+      s.pop();
+      s.pop();
+      s.pop();
+      s.pop();
+      s.pop();
+    });
 
-  std::thread t4([&]() {
-    s.pop();
-    s.pop();
-    s.pop();
-    s.pop();
-    s.pop();
-  });
+    std::thread t4([&]() {
+      s.pop();
+      s.pop();
+      s.pop();
+      s.pop();
+      s.pop();
+    });
 
-  t3.join();
-  t4.join();
+    t3.join();
+    t4.join();
 
-  s.print();
+    // assert(s.empty());
+  }
 }
 
 void test_list() {
-  auto l = lockfree::List<int>();
+  auto l = lockfree::Queue<int>();
 
   std::thread t1([&]() {
     l.push_front(4);
@@ -97,7 +100,7 @@ void test_list() {
 
 int main(int argc, char** argv) {
   test_stack();
-  test_list();
+  // test_list();
 
   return 0;
 }

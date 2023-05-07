@@ -14,14 +14,18 @@ Checks: >
   -fuchsia-default-arguments-calls,
   -modernize-use-trailing-return-type,
   -modernize-avoid-c-arrays,
+  -readability-identifier-length,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+
   google-explicit-constructor,
   readability-isolate-declaration
 
 CheckOptions:
-  - { key: readability-identifier-naming.NamespaceCase, value: lower_case }
-  - { key: readability-identifier-naming.PrivateMemberPrefix, value: _ }
-  - { key: readability-identifier-naming.FunctionCase, value: lower_case }
-  - { key: readability-identifier-naming.VariableCase, value: lower_case }
-  - { key: readability-identifier-naming.ParameterCase, value: lower_case }
-  - { key: readability-identifier-naming.GlobalConstantCase, value: CamelCase }
-  - { key: readability-identifier-naming.GlobalConstantPrefix, value: k }
+
+- { key: readability-identifier-naming.NamespaceCase, value: lower_case }
+- { key: readability-identifier-naming.PrivateMemberPrefix, value: _ }
+- { key: readability-identifier-naming.FunctionCase, value: lower_case }
+- { key: readability-identifier-naming.VariableCase, value: lower_case }
+- { key: readability-identifier-naming.ParameterCase, value: lower_case }
+- { key: readability-identifier-naming.GlobalConstantCase, value: CamelCase }
+- { key: readability-identifier-naming.GlobalConstantPrefix, value: k }

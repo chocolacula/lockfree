@@ -2,7 +2,11 @@
 #include <cstddef>
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <utility>
+
+#include "hazard_ptr.h"
+#include "nop.h"
 
 namespace lockfree {
 
@@ -30,27 +34,41 @@ struct Stack {
 
   void push(T&& val) {
     auto* node = new Node(std::forward<T>(val));
+    size_t n = 1;
 
-    do {
-      node->next = _head.load(std::memory_order_relaxed);
-    } while (!_head.compare_exchange_weak(  //
-        node->next,                         // expected
-        node,                               // desired
-        std::memory_order_release,          //
-        std::memory_order_relaxed));
+    while (true) {
+      auto* next = _head.load(std::memory_order_relaxed);
+      node->next = next;
+
+      if (_head.compare_exchange_weak(    //
+              node->next,                 // expected
+              node,                       // desired
+              std::memory_order_release,  //
+              std::memory_order_relaxed)) {
+        break;
+      }
+      back_off(&n);
+    }
   }
 
   void pop() {
-    Node* node;
-    do {
-      node = _head.load(std::memory_order_relaxed);
-    } while (!_head.compare_exchange_weak(  //
-        node,                               // expected
-        node->next,                         // desired
-        std::memory_order_release,          //
-        std::memory_order_relaxed));
+    size_t n = 1;
 
-    delete node;
+    while (true) {
+      auto hp = Hazard::get(0);
+      auto* node = _head.load(std::memory_order_relaxed);
+      *hp = node;
+
+      if (_head.compare_exchange_weak(    //
+              node,                       // expected
+              node->next,                 // desired
+              std::memory_order_release,  //
+              std::memory_order_relaxed)) {
+        Hazard::retire(hp);
+        break;
+      }
+      back_off(&n);
+    }
   }
 
   size_t size() {
@@ -90,7 +108,9 @@ struct Stack {
     explicit Node(T&& val) : val(std::forward<T>(val)), next(nullptr) {
     }
     ~Node() {
-      std::cout << "deleted " << val << std::endl;
+      std::string str = "deleted ";
+      str += std::to_string(val);
+      std::cout << str << std::endl;
     }
     Node* next;
     T val;

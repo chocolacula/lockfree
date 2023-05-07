@@ -20,8 +20,7 @@ struct Spin {
         std::memory_order_relaxed)) {
       // use exponential back off
       n = b;
-      back_off(b);
-      b *= 2;
+      back_off(&b);
     }
     // This fence synchronizes-with store in `release`
     atomic_thread_fence(std::memory_order_acquire);
@@ -35,12 +34,6 @@ struct Spin {
 
  private:
   std::atomic_bool _state;
-
-  void back_off(size_t n) {
-    for (auto i = 0; i < n; i++) {
-      nop();
-    }
-  }
 };
 
 struct SpinGuard {

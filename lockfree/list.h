@@ -6,11 +6,11 @@
 namespace lockfree {
 
 template <typename T>
-struct List {
-  List() : _head(nullptr), _tail(nullptr) {
+struct Queue {
+  Queue() : _head(nullptr), _tail(nullptr) {
   }
 
-  ~List() {
+  ~Queue() {
     auto* node = _head;
 
     while (node != nullptr) {
