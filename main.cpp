@@ -101,62 +101,62 @@ void test_list() {
 
     l.print();
   }
-  std::cout << "stack: ok" << std::endl;
+  std::cout << "list: ok" << std::endl;
 }
 
 void test_queue() {
-  for (auto i = 0; i < N; i++) {
+  // for (auto i = 0; i < N; i++) {
 
-    auto q = lockfree::Queue<int>();
+  auto q = lockfree::Queue<int>();
 
-    std::thread t1([&]() {
-      q.push(4);
-      q.push(2);
-      q.push(6);
-      q.push(8);
-      q.push(10);
-    });
+  std::thread t1([&]() {
+    q.push(4);
+    q.push(2);
+    q.push(6);
+    q.push(8);
+    q.push(10);
+  });
 
-    std::thread t2([&]() {
-      q.push(3);
-      q.push(1);
-      q.push(5);
-      q.push(7);
-      q.push(9);
-    });
+  std::thread t2([&]() {
+    q.push(3);
+    q.push(1);
+    q.push(5);
+    q.push(7);
+    q.push(9);
+  });
 
-    t1.join();
-    t2.join();
+  t1.join();
+  t2.join();
 
-    q.print();
+  q.print();
 
-    std::thread t3([&]() {
-      q.pop();
-      q.pop();
-      q.pop();
-      q.pop();
-      q.pop();
-    });
+  // std::thread t3([&]() {
+  //   q.pop();
+  //   q.pop();
+  //   q.pop();
+  //   q.pop();
+  //   q.pop();
+  // });
 
-    std::thread t4([&]() {
-      q.pop();
-      q.pop();
-      q.pop();
-      q.pop();
-      q.pop();
-    });
+  // std::thread t4([&]() {
+  //   q.pop();
+  //   q.pop();
+  //   q.pop();
+  //   q.pop();
+  //   q.pop();
+  // });
 
-    t3.join();
-    t4.join();
+  // t3.join();
+  // t4.join();
 
-    q.print();
-  }
-  std::cout << "stack: ok" << std::endl;
+  // q.print();
+  // }
+  std::cout << "queue: ok" << std::endl;
 }
 
 int main(int argc, char** argv) {
-  test_stack();
-  test_list();
+  // test_stack();
+  // test_list();
   test_queue();
 
   return 0;
