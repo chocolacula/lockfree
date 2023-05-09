@@ -57,6 +57,9 @@ struct Stack {
 
   // from the beginning
   void pop() {
+    if (empty()) {
+      return;
+    }
     size_t n = 1;
 
     while (true) {

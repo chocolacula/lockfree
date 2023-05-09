@@ -37,6 +37,12 @@ struct Queue {
     size_t n = 1;
 
     while (true) {
+
+      // if q is empty
+      // we need to set _heap and _tail the node
+      // else
+      // set _tail->next as node
+
       auto* next = _head.load(std::memory_order_relaxed);
       node->next = next;
 
@@ -53,9 +59,17 @@ struct Queue {
 
   // from the beginning
   void pop() {
+    if (empty()) {
+      return;
+    }
     size_t n = 1;
 
     while (true) {
+
+      // get _head->next as node
+      // we have to protect node because we set node->next in following CAS
+      // set _head as _head->next
+
       auto* hp = Hazard::get(0);
       auto* node = _head.load(std::memory_order_relaxed);
       *hp = node;
