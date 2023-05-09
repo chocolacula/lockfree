@@ -57,6 +57,7 @@ struct Stack {
     while (true) {
       auto* hp = Hazard::get(0);
       auto* node = _head.load(std::memory_order_relaxed);
+      // we have to protect node because we set node->next in following CAS
       *hp = node;
       if (_head.compare_exchange_weak(    //
               node,                       // expected
