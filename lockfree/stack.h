@@ -1,3 +1,5 @@
+#pragma once
+
 #include <atomic>
 #include <cstddef>
 #include <iostream>
@@ -25,6 +27,7 @@ struct Stack {
     }
   }
 
+  // from top of the stack
   T& peek() {
     if (_head == nullptr) {
       throw std::runtime_error("The stack is empty");
@@ -32,6 +35,7 @@ struct Stack {
     return _head->val;
   }
 
+  // to the beginning
   void push(T&& val) {
     auto* node = new Node(std::forward<T>(val));
     size_t n = 1;
@@ -51,6 +55,7 @@ struct Stack {
     }
   }
 
+  // from the beginning
   void pop() {
     size_t n = 1;
 
@@ -69,18 +74,6 @@ struct Stack {
       }
       back_off(&n);
     }
-  }
-
-  size_t size() {
-    size_t s = 0;
-    auto* node = _head.load();
-
-    while (node != nullptr) {
-      auto* next = node->next;
-      s++;
-      node = next;
-    }
-    return s;
   }
 
   bool empty() {

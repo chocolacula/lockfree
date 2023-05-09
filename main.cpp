@@ -3,6 +3,7 @@
 #include <thread>
 
 #include "lockfree/list.h"
+#include "lockfree/queue.h"
 #include "lockfree/stack.h"
 
 static const size_t N = 50;
@@ -50,59 +51,113 @@ void test_stack() {
 
     assert(s.empty());
   }
-
   std::cout << "stack: ok" << std::endl;
 }
 
 void test_list() {
-  auto l = lockfree::Queue<int>();
+  for (auto i = 0; i < N; i++) {
 
-  std::thread t1([&]() {
-    l.push_front(4);
-    l.push_front(2);
-    l.push_back(6);
-    l.push_back(8);
-    l.push_back(10);
-  });
+    auto l = lockfree::DList<int>();
 
-  std::thread t2([&]() {
-    l.push_front(3);
-    l.push_front(1);
-    l.push_back(5);
-    l.push_back(7);
-    l.push_back(9);
-  });
+    std::thread t1([&]() {
+      l.push_front(4);
+      l.push_front(2);
+      l.push_back(6);
+      l.push_back(8);
+      l.push_back(10);
+    });
 
-  t1.join();
-  t2.join();
+    std::thread t2([&]() {
+      l.push_front(3);
+      l.push_front(1);
+      l.push_back(5);
+      l.push_back(7);
+      l.push_back(9);
+    });
 
-  l.print();
+    t1.join();
+    t2.join();
 
-  std::thread t3([&]() {
-    l.remove(4);
-    l.remove(2);
-    l.remove(6);
-    l.remove(8);
-    l.remove(10);
-  });
+    l.print();
 
-  std::thread t4([&]() {
-    l.remove(3);
-    l.remove(1);
-    l.remove(5);
-    l.remove(7);
-    l.remove(9);
-  });
+    std::thread t3([&]() {
+      l.remove(4);
+      l.remove(2);
+      l.remove(6);
+      l.remove(8);
+      l.remove(10);
+    });
 
-  t3.join();
-  t4.join();
+    std::thread t4([&]() {
+      l.remove(3);
+      l.remove(1);
+      l.remove(5);
+      l.remove(7);
+      l.remove(9);
+    });
 
-  l.print();
+    t3.join();
+    t4.join();
+
+    l.print();
+  }
+  std::cout << "stack: ok" << std::endl;
+}
+
+void test_queue() {
+  for (auto i = 0; i < N; i++) {
+
+    auto q = lockfree::Queue<int>();
+
+    std::thread t1([&]() {
+      q.push(4);
+      q.push(2);
+      q.push(6);
+      q.push(8);
+      q.push(10);
+    });
+
+    std::thread t2([&]() {
+      q.push(3);
+      q.push(1);
+      q.push(5);
+      q.push(7);
+      q.push(9);
+    });
+
+    t1.join();
+    t2.join();
+
+    q.print();
+
+    std::thread t3([&]() {
+      q.pop();
+      q.pop();
+      q.pop();
+      q.pop();
+      q.pop();
+    });
+
+    std::thread t4([&]() {
+      q.pop();
+      q.pop();
+      q.pop();
+      q.pop();
+      q.pop();
+    });
+
+    t3.join();
+    t4.join();
+
+    q.print();
+  }
+  std::cout << "stack: ok" << std::endl;
 }
 
 int main(int argc, char** argv) {
   test_stack();
-  // test_list();
+  test_list();
+  test_queue();
 
   return 0;
 }

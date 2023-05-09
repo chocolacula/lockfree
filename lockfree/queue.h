@@ -1,7 +1,10 @@
+#pragma once
+
 #include <iostream>
 #include <utility>
 
 #include "hazard_ptr.h"
+#include "nop.h"
 
 namespace lockfree {
 
@@ -20,113 +23,52 @@ struct Queue {
     }
   }
 
-  T& front() {
+  // from the beginning of the queue
+  T& peek() {
     if (_head == nullptr) {
-      throw std::runtime_error("The queue is empty");
+      throw std::runtime_error("The stack is empty");
     }
     return _head->val;
   }
 
-  T& back() {
-    if (_head == nullptr) {
-      throw std::runtime_error("The queue is empty");
-    }
-    return _tail->val;
-  }
-
-  void push_front(T&& val) {
+  // to the end
+  void push(T&& val) {
     auto* node = new Node(std::forward<T>(val));
+    size_t n = 1;
 
-    if (_head == nullptr) {
-      _head = node;  // ???
-      _tail = node;  // ???
-    } else {
-      do {
-        auto* head = _head.load(std::memory_order_relaxed);
-        node->next = head;
-        Hazard::watch(head);
+    while (true) {
+      auto* next = _head.load(std::memory_order_relaxed);
+      node->next = next;
 
-        _head->prev = node;  // ???
-
-      } while (!_head.compare_exchange_weak(  //
-          node,                               // expected
-          node->next,                         // desired
-          std::memory_order_release,          //
-          std::memory_order_relaxed));
-    }
-  }
-
-  void push_back(T&& val) {
-    auto* node = new Node(std::forward<T>(val));
-
-    if (_tail == nullptr) {
-      _tail = node;  // ???
-      _head = node;  // ???
-    } else {
-      do {
-        auto* tail = _tail.load(std::memory_order_relaxed);
-        node->prev = tail;
-        Hazard::watch(tail);
-
-        _tail->next = node;  // ???
-
-      } while (!_tail.compare_exchange_weak(  //
-          node->prev,                         // expected
-          node,                               // desired
-          std::memory_order_release,          //
-          std::memory_order_relaxed));
-      Hazard::retire_all();
-    }
-  }
-
-  void remove(T&& val) {
-    auto* node = _head;
-
-    while (node != nullptr) {
-      auto* next = node->next;
-
-      if (node->val == val) {
-        {
-          SpinGuard sg;
-          if (node == _head) {
-            _head = node->next;
-            if (_head != nullptr) {
-              _head->prev = nullptr;
-            } else {
-              // last element was deleted
-              _tail = _head;
-            }
-          } else if (node == _tail) {
-            _tail = node->prev;
-            if (_tail != nullptr) {
-              _tail->next = nullptr;
-            } else {
-              // last element was deleted
-              _head = _tail;
-            }
-          } else {
-            node->prev->next = node->next;
-            node->next->prev = node->prev;
-          }
-        }
-        delete node;
+      if (_head.compare_exchange_weak(    //
+              node->next,                 // expected
+              node,                       // desired
+              std::memory_order_release,  //
+              std::memory_order_relaxed)) {
         break;
       }
-
-      node = next;
+      back_off(&n);
     }
   }
 
-  size_t size() {
-    size_t s = 0;
-    auto* node = _head;
+  // from the beginning
+  void pop() {
+    size_t n = 1;
 
-    while (node != nullptr) {
-      auto* next = node->next;
-      s++;
-      node = next;
+    while (true) {
+      auto* hp = Hazard::get(0);
+      auto* node = _head.load(std::memory_order_relaxed);
+      *hp = node;
+      if (_head.compare_exchange_weak(    //
+              node,                       // expected
+              node->next,                 // desired
+              std::memory_order_release,  //
+              std::memory_order_relaxed)) {
+        Hazard::retire(node);
+        break;
+      }
+      back_off(&n);
     }
-    return s;
   }
 
   bool empty() {

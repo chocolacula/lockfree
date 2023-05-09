@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <utility>
 
@@ -6,11 +8,11 @@
 namespace lockfree {
 
 template <typename T>
-struct Queue {
-  Queue() : _head(nullptr), _tail(nullptr) {
+struct DList {
+  DList() : _head(nullptr), _tail(nullptr) {
   }
 
-  ~Queue() {
+  ~DList() {
     auto* node = _head;
 
     while (node != nullptr) {
@@ -98,18 +100,6 @@ struct Queue {
 
       node = next;
     }
-  }
-
-  size_t size() {
-    size_t s = 0;
-    auto* node = _head;
-
-    while (node != nullptr) {
-      auto* next = node->next;
-      s++;
-      node = next;
-    }
-    return s;
   }
 
   bool empty() {
