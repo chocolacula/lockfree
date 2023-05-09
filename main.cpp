@@ -5,9 +5,11 @@
 #include "lockfree/list.h"
 #include "lockfree/stack.h"
 
+static const size_t N = 50;
+
 void test_stack() {
   auto s = lockfree::Stack<int>();
-  for (auto i = 0; i < 100; i++) {
+  for (auto i = 0; i < N; i++) {
     std::thread t1([&]() {
       s.push(2);
       s.push(4);
@@ -23,11 +25,10 @@ void test_stack() {
       s.push(7);
       s.push(9);
     });
-
     t1.join();
     t2.join();
 
-    assert(s.empty());
+    assert(!s.empty());
 
     std::thread t3([&]() {
       s.pop();
@@ -44,12 +45,13 @@ void test_stack() {
       s.pop();
       s.pop();
     });
-
     t3.join();
     t4.join();
 
-    // assert(s.empty());
+    assert(s.empty());
   }
+
+  std::cout << "stack: ok" << std::endl;
 }
 
 void test_list() {

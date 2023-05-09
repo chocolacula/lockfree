@@ -55,16 +55,15 @@ struct Stack {
     size_t n = 1;
 
     while (true) {
-      auto hp = Hazard::get(0);
+      auto* hp = Hazard::get(0);
       auto* node = _head.load(std::memory_order_relaxed);
       *hp = node;
-
       if (_head.compare_exchange_weak(    //
               node,                       // expected
               node->next,                 // desired
               std::memory_order_release,  //
               std::memory_order_relaxed)) {
-        Hazard::retire(hp);
+        Hazard::retire(node);
         break;
       }
       back_off(&n);
@@ -110,7 +109,8 @@ struct Stack {
     ~Node() {
       std::string str = "deleted ";
       str += std::to_string(val);
-      std::cout << str << std::endl;
+      str += '\n';
+      std::cout << str;
     }
     Node* next;
     T val;
